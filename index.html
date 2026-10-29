@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Рефлексія: настрій, енергія, хмара слів, дошка 🖼️</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/caveat@5/700.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/nunito@5/400.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/nunito@5/700.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/nunito@5/800.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/nunito@5/900.css">
+<script src="https://cdn.jsdelivr.net/npm/mqtt@5/dist/mqtt.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{--ink:#1a1a1a;--paper:#fdfcff;--line:#cfc4e6;--margin:#f6a5c0;--sq:#e8434c;--ci:#f7941d}
+  body{font-family:'Nunito',system-ui,sans-serif;color:var(--ink);min-height:100vh;overflow-x:hidden;
+    background:
+      linear-gradient(to right,transparent 0 58px,var(--margin) 58px 61px,transparent 61px),
+      repeating-linear-gradient(to bottom,transparent 0 44px,var(--line) 44px 46px),
+      var(--paper)}
+  .wrap{max-width:1080px;margin:0 auto;padding:24px 16px 70px}
+  .screen{display:none}
+  .screen.active{display:block;animation:fadeUp .4s ease both}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  h1.title{font-family:'Caveat',cursive;font-weight:700;text-align:center;font-size:clamp(38px,6vw,64px);color:#ffb340;line-height:1.05;-webkit-text-stroke:2px #e07b00;text-shadow:3px 3px 0 rgba(224,123,0,.25);transform:rotate(-1deg);margin-bottom:4px}
+  .subtitle{text-align:center;font-weight:800;color:#6b6488;margin-bottom:14px;font-size:14px}
+  .panel{background:#fff;border:3px solid var(--ink);border-radius:20px;box-shadow:6px 6px 0 var(--ink);position:relative}
+  .chunk-btn{font-family:inherit;font-weight:900;border:3px solid var(--ink);border-radius:16px;padding:12px 22px;font-size:15px;cursor:pointer;box-shadow:5px 5px 0 var(--ink);transition:transform .12s,box-shadow .12s;display:inline-flex;align-items:center;gap:9px;color:var(--ink);background:#fff}
+  .chunk-btn:hover{transform:translate(-2px,-2px);box-shadow:7px 7px 0 var(--ink)}
+  .chunk-btn:active{transform:translate(3px,3px);box-shadow:2px 2px 0 var(--ink)}
+  .btn-yellow{background:#ffd23f}.btn-pink{background:#ff7ac3;color:#fff}.btn-blue{background:#4cc9f0}.btn-red{background:#fff;color:var(--red)}.btn-green{background:#b6f2c8}
+  .icon-btn{padding:8px 14px;font-size:14px;border-radius:99px}
+  #openSep{position:fixed;top:10px;right:10px;z-index:120;background:#ffd23f;border:3px solid var(--ink);border-radius:99px;padding:8px 16px;font-weight:900;font-size:13px;text-decoration:none;color:var(--ink);box-shadow:4px 4px 0 var(--ink);display:none}
+  .topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+  .conn-pill{border:3px solid var(--ink);border-radius:99px;padding:7px 15px;font-weight:900;font-size:13px;display:inline-flex;align-items:center;gap:8px;background:#eee}
+  .conn-pill i{width:10px;height:10px;background:#fff;border-radius:50%;animation:blink 1.2s infinite}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+  .conn-pill.on{background:#3cb549}.conn-pill.wait{background:#ffd23f}.conn-pill.off{background:#ffc4c4}
+  .tabs{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:10px 0 16px}
+  .tab{font-family:inherit;font-weight:900;font-size:14px;border:3px solid var(--ink);background:#fff;border-radius:99px;padding:10px 16px;cursor:pointer;box-shadow:4px 4px 0 var(--ink);transition:.15s}
+  .tab:hover{transform:translateY(-2px)}
+  .tab.on{background:#ffd23f;transform:translateY(-2px);box-shadow:6px 6px 0 var(--ink)}
+  .legend{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin:4px 0 12px}
+  .leg{display:inline-flex;align-items:center;gap:9px;background:#fff;border:3px solid var(--ink);border-radius:99px;padding:6px 15px;font-weight:900;font-size:13px;box-shadow:4px 4px 0 var(--ink)}
+  .leg .sh{width:18px;height:18px;border:3px solid var(--ink);display:inline-block}
+  .leg .sh.sq{border-radius:5px;background:var(--sq)}
+  .leg .sh.ci{border-radius:50%;background:var(--ci)}
+  .lesson-banner{margin:0 auto 14px;max-width:640px;text-align:center;border:3px solid var(--ink);border-radius:16px;padding:9px 16px;font-weight:900;font-size:14px;box-shadow:5px 5px 0 var(--ink);background:#fff}
+  .lesson-banner.run{background:#b6f2c8}.lesson-banner.done{background:#ffd9b0}
+  .name-row{text-align:center;margin-bottom:12px}
+  .name-input{border:3px solid var(--ink);border-radius:14px;padding:11px 18px;font-family:inherit;font-weight:800;font-size:16px;outline:none;background:#fff;width:100%;max-width:400px}
+  .name-input:focus{box-shadow:4px 4px 0 #4cc9f0}
+  .emo-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-top:8px}
+  .emo-card{background:#fff;border:3px solid var(--ink);border-radius:20px;padding:18px 6px 14px;display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer;font-family:inherit;box-shadow:5px 5px 0 var(--ink);transition:transform .13s,box-shadow .13s,background .13s;position:relative}
+  .emo-card .face{font-size:46px;line-height:1;transition:transform .15s}
+  .emo-card .lbl{font-weight:900;font-size:15px}
+  .emo-card:hover{transform:translate(-2px,-3px) rotate(-1.5deg);box-shadow:7px 8px 0 var(--ink)}
+  .emo-card:hover .face{transform:scale(1.2) rotate(-8deg)}
+  .emo-card:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink)}
+  .emo-card.selected{background:var(--tint);transform:translate(-2px,-3px) scale(1.04);box-shadow:7px 8px 0 var(--ink);animation:wiggle .45s ease}
+  @keyframes wiggle{0%{transform:rotate(0) scale(1.04)}25%{transform:rotate(-4deg) scale(1.08)}55%{transform:rotate(4deg) scale(1.06)}100%{transform:rotate(0) scale(1.04)}}
+  .emo-card .star{position:absolute;top:-12px;right:-10px;font-size:24px;transform:scale(0);transition:transform .25s cubic-bezier(.34,1.56,.64,1)}
+  .emo-card.selected .star{transform:scale(1) rotate(15deg)}
+  .bat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px 4px}
+  .cell{text-align:center;padding:5px 3px;border-radius:18px;transition:background .2s}
+  .cell:hover{background:#ffffffaa}
+  .cell .bat{width:min(110px,80%);margin:0 auto;transition:transform .18s}
+  .cell:hover .bat{transform:scale(1.06) rotate(-2deg)}
+  .cell.picked{background:#fff;box-shadow:0 0 0 3px var(--ink);border-radius:18px}
+  .marks{display:flex;gap:14px;justify-content:center;margin-top:5px}
+  .mark{width:34px;height:34px;border:4px solid var(--ink);background:#fff;cursor:pointer;transition:transform .15s,background .15s;padding:0}
+  .mark.sq{border-radius:8px}.mark.ci{border-radius:50%}
+  .mark:hover{transform:scale(1.15)}
+  .mark.on.sq{background:var(--sq);animation:pop .35s cubic-bezier(.34,1.56,.64,1)}
+  .mark.on.ci{background:var(--ci);animation:pop .35s cubic-bezier(.34,1.56,.64,1)}
+  @keyframes pop{0%{transform:scale(.5)}60%{transform:scale(1.25)}100%{transform:scale(1)}}
+  .wc-question{font-family:'Caveat',cursive;font-size:clamp(26px,4.5vw,40px);color:#4c3f91;text-align:center;margin:4px 0 12px;line-height:1.15}
+  .wc-input-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:12px}
+  .wc-input{border:3px solid var(--ink);border-radius:14px;padding:11px 16px;font-family:inherit;font-weight:800;font-size:16px;outline:none;background:#fff;width:100%;max-width:340px}
+  .wc-input:focus{box-shadow:4px 4px 0 #b388eb}
+  .my-chips{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:12px}
+  .chip{background:#efe4fb;border:3px solid var(--ink);border-radius:99px;padding:6px 14px;font-weight:900;font-size:14px;display:inline-flex;align-items:center;gap:8px;box-shadow:3px 3px 0 var(--ink)}
+  .chip button{border:none;background:#fff;border:2px solid var(--ink);border-radius:50%;width:22px;height:22px;cursor:pointer;font-weight:900;line-height:1;font-size:12px}
+  .cloud{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;justify-content:center;padding:14px 8px;min-height:110px}
+  .cloud span{font-weight:900;line-height:1.05;display:inline-block;animation:cloudIn .5s cubic-bezier(.34,1.4,.64,1) both}
+  @keyframes cloudIn{from{opacity:0;transform:scale(.5)}to{opacity:1;transform:scale(1)}}
+  .wc-closed{background:#ffe3e3;border:3px solid var(--ink);border-radius:14px;padding:10px 16px;font-weight:900;display:inline-block;box-shadow:4px 4px 0 var(--ink)}
+  .wc-panel{padding:20px;margin-bottom:14px;background:#fbf8ff}
+  .wc-panel h3{font-size:16px;font-weight:900;margin-bottom:10px}
+  .wc-q-input{border:3px solid var(--ink);border-radius:14px;padding:12px 16px;font-family:inherit;font-weight:800;font-size:16px;outline:none;background:#fff;width:100%}
+  .wc-q-input:focus{box-shadow:4px 4px 0 #b388eb}
+  .wc-q-hint{font-size:12.5px;font-weight:700;color:#6b6488;margin-top:8px}
+  /* ДОШКА */
+  .board-panel{padding:20px;margin-bottom:14px;background:#f4fbff}
+  .board-panel h3{font-size:16px;font-weight:900;margin-bottom:10px}
+  .canvas-wrap{border:3px solid var(--ink);border-radius:14px;overflow:hidden;background:#fff;box-shadow:5px 5px 0 var(--ink);max-width:640px;margin:0 auto}
+  #drawCanvas{display:block;width:100%;touch-action:none;cursor:crosshair}
+  .tools{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;align-items:center;margin:12px 0}
+  .swatch{width:32px;height:32px;border-radius:50%;border:3px solid var(--ink);cursor:pointer;box-shadow:2px 2px 0 var(--ink);transition:transform .12s;padding:0}
+  .swatch:hover{transform:scale(1.12)}
+  .swatch.on{outline:3px solid #4cc9f0;transform:scale(1.12)}
+  .sizebtn{width:34px;height:34px;border-radius:50%;border:3px solid var(--ink);background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:2px 2px 0 var(--ink);padding:0}
+  .sizebtn i{background:var(--ink);border-radius:50%;display:block}
+  .sizebtn.on{background:#ffd23f}
+  .toolsep{width:3px;height:26px;background:var(--ink);border-radius:2px;margin:0 4px}
+  .draw-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;margin-top:10px}
+  .draw-card{background:#fff;border:3px solid var(--ink);border-radius:14px;overflow:hidden;box-shadow:4px 4px 0 var(--ink);position:relative;animation:cloudIn .4s ease both}
+  .draw-card.mine{outline:4px solid #4cc9f0}
+  .draw-card img{width:100%;display:block;background:#fff;border-bottom:3px solid var(--ink)}
+  .draw-card .sig{padding:7px 10px;font-weight:900;font-size:13px;display:flex;align-items:center;gap:6px}
+  .draw-card .sig .tm{margin-left:auto;font-size:10.5px;color:#6b6488;font-weight:800}
+  .draw-card .del{position:absolute;top:6px;right:6px;border:2px solid var(--ink);background:#fff;border-radius:50%;width:26px;height:26px;cursor:pointer;font-weight:900;font-size:13px;line-height:1;box-shadow:2px 2px 0 var(--ink)}
+  .yay{margin-top:16px;font-weight:900;font-size:16px;background:#b6f2c8;border:3px solid var(--ink);border-radius:16px;padding:10px 18px;display:inline-block;box-shadow:4px 4px 0 var(--ink);opacity:0;transform:scale(.6);transition:.3s cubic-bezier(.34,1.56,.64,1)}
+  .yay.show{opacity:1;transform:scale(1)}
+  .status-line{text-align:center;margin-top:12px;font-weight:900;font-size:15px}
+  .status-line .ok{background:#b6f2c8;border:2px solid var(--ink);border-radius:10px;padding:2px 9px;display:inline-block;margin:3px}
+  .status-line .no{background:#ffe3e3;border:2px solid var(--ink);border-radius:10px;padding:2px 9px;display:inline-block;margin:3px}
+  .peers{text-align:center;margin-top:10px;font-weight:800;color:#6b6488;font-size:14px}
+  .peers b{background:#ffd23f;border:2px solid var(--ink);border-radius:8px;padding:1px 8px}
+  .ex-panel{padding:24px 20px;text-align:center}
+  .ex-panel h2{font-family:'Caveat',cursive;font-size:clamp(28px,4.5vw,42px);-webkit-text-stroke:1.5px #e07b00;color:#ffb340;margin-bottom:4px}
+  .ex-panel .sub{font-weight:800;color:#6b6488;font-size:14px;margin-bottom:10px}
+  .t-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+  .t-head h1{font-family:'Caveat',cursive;font-size:clamp(28px,5vw,44px);-webkit-text-stroke:1.5px #e07b00;color:#ffb340}
+  .room-badge{background:#b388eb;border:3px solid var(--ink);border-radius:99px;padding:6px 15px;font-weight:900;font-size:13px;box-shadow:3px 3px 0 var(--ink)}
+  .timer-panel{padding:14px 18px;margin-bottom:14px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:center;background:#fffef2}
+  .timer-display{font-size:clamp(26px,4.5vw,40px);font-weight:900;font-variant-numeric:tabular-nums;background:#fff;border:3px solid var(--ink);border-radius:14px;padding:5px 18px;box-shadow:4px 4px 0 var(--ink);min-width:140px;text-align:center}
+  .timer-display.run{background:#b6f2c8}.timer-display.done{background:#ffd9b0}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px}
+  .stats.c3{grid-template-columns:repeat(3,1fr)}
+  .stats.c2{grid-template-columns:repeat(2,1fr)}
+  .stat{padding:14px;text-align:center}
+  .stat:nth-child(1){background:#fff4cc;transform:rotate(-1deg)}
+  .stat:nth-child(2){background:#dff7ff;transform:rotate(.8deg)}
+  .stat:nth-child(3){background:#ffe0ef;transform:rotate(-.6deg)}
+  .stat:nth-child(4){background:#e2fbe9;transform:rotate(.5deg)}
+  .stat .num{font-size:clamp(22px,3.4vw,34px);font-weight:900;display:inline-block}
+  .stat .num.bump{animation:bump .5s ease}
+  @keyframes bump{0%{transform:scale(1)}40%{transform:scale(1.25) rotate(-4deg)}100%{transform:scale(1)}}
+  .stat .lbl{font-weight:900;font-size:10.5px;letter-spacing:.5px;text-transform:uppercase;color:#6b6488;margin-top:3px}
+  .grid2{display:grid;grid-template-columns:1.4fr 1fr;gap:14px}
+  .panel h3{font-size:16px;font-weight:900;margin-bottom:12px}
+  .chart-panel,.feed-panel{padding:18px}
+  .bar-row{margin-bottom:13px}
+  .bar-head{display:flex;justify-content:space-between;align-items:baseline;font-weight:900;font-size:14px;margin-bottom:4px}
+  .bar-head .cnt{font-size:12px;color:#6b6488}
+  .bar-track{height:20px;background:#f3f0fa;border:2px solid var(--ink);border-radius:99px;overflow:hidden}
+  .bar-fill{height:100%;width:0;border-radius:99px;transition:width .7s cubic-bezier(.34,1.3,.5,1);background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.35) 0 10px,transparent 10px 20px);animation:stripes 3s linear infinite}
+  @keyframes stripes{to{background-position:-40px 0}}
+  .grp{margin-bottom:12px}
+  .grp-title{font-weight:900;font-size:13px;margin-bottom:4px;display:flex;align-items:center;gap:8px}
+  .grp-title .dotc{width:13px;height:13px;border-radius:4px;border:2px solid var(--ink)}
+  .duo{display:grid;grid-template-columns:24px 1fr 44px;gap:7px;align-items:center;margin-bottom:4px;font-weight:900;font-size:12px}
+  .duo .track{height:16px;background:#f3f0fa;border:2px solid var(--ink);border-radius:99px;overflow:hidden}
+  .duo .fill{height:100%;width:0;border-radius:99px;transition:width .7s cubic-bezier(.34,1.3,.5,1)}
+  .strip{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;margin-top:6px}
+  .mini{background:#fff;border:3px solid var(--ink);border-radius:12px;padding:5px 6px;text-align:center;box-shadow:3px 3px 0 var(--ink);width:78px}
+  .mini svg{width:40px}
+  .mini .cnts{font-weight:900;font-size:10px;display:flex;justify-content:center;gap:7px;margin-top:2px}
+  .mini .cnts .s{color:var(--sq)}.mini .cnts .c{color:var(--ci)}
+  .feed{list-style:none;display:flex;flex-direction:column;gap:8px;max-height:360px;overflow-y:auto}
+  .feed li{border:3px solid var(--ink);border-radius:12px;padding:7px 11px;font-weight:800;font-size:12.5px;display:flex;align-items:center;gap:8px;background:var(--tint,#fff);box-shadow:3px 3px 0 var(--ink);animation:slideIn .35s ease both}
+  @keyframes slideIn{from{opacity:0;transform:translateX(22px)}to{opacity:1;transform:none}}
+  .feed li .tm{margin-left:auto;font-size:10.5px;color:#6b6488}
+  .empty{text-align:center;padding:40px 20px;font-weight:800;color:#6b6488}
+  .empty .big{font-size:52px;display:block;margin-bottom:8px;animation:bob 3s ease-in-out infinite}
+  @keyframes bob{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-12px) rotate(3deg)}}
+  .link-panel{margin-top:14px;padding:18px}
+  .linkbox{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:#fffef9;border:3px dashed var(--ink);border-radius:14px;padding:10px 14px;margin-top:8px}
+  .linkbox code{font-family:inherit;font-weight:900;color:#d6336c;font-size:13px;word-break:break-all;flex:1;min-width:180px}
+  .linkbox .lb-lbl{font-weight:900;font-size:13px;min-width:110px}
+  .actions{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;justify-content:center}
+  .small-note{margin-top:10px;font-size:12.5px;font-weight:700;color:#6b6488}
+  .confetti{position:fixed;width:11px;height:11px;z-index:99;pointer-events:none;animation:confFall 1.4s ease-in forwards}
+  @keyframes confFall{to{transform:translate(var(--dx),110vh) rotate(720deg);opacity:.2}}
+  #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(28px);background:var(--ink);color:#ffd23f;font-weight:900;padding:13px 24px;border-radius:14px;z-index:100;opacity:0;transition:.3s;pointer-events:none;border:3px solid #fff;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  @media(max-width:760px){
+    .grid2{grid-template-columns:1fr}
+    .stats,.stats.c3,.stats.c2{grid-template-columns:1fr 1fr}
+    .emo-grid{grid-template-columns:repeat(2,1fr)}
+    body{background:
+      linear-gradient(to right,transparent 0 22px,var(--margin) 22px 25px,transparent 25px),
+      repeating-linear-gradient(to bottom,transparent 0 44px,var(--line) 44px 46px),var(--paper)}
+  }
+</style>
+</head>
+<body>
+<a id="openSep" target="_blank" rel="noopener">↗ Відкрити окремо</a>
+<div class="wrap">
+
+  <!-- ================= STUDENT ================= -->
+  <section class="screen active" id="scr-student">
+    <div class="topbar">
+      <button class="chunk-btn icon-btn" id="toTeacher" type="button">🧑‍🏫 Вчитель</button>
+      <span class="conn-pill wait" data-conn><i></i> ПІДКЛЮЧЕННЯ…</span>
+    </div>
+    <h1 class="title">Рефлексія класу</h1>
+    <p class="subtitle">Чотири вправи: настрій, енергія, хмара слів і спільна дошка малюнків! ⚡</p>
+    <div class="name-row"><input class="name-input" id="pupilName" maxlength="24" placeholder="Твоє ім'я (необов'язково) ✏️"></div>
+    <div class="tabs">
+      <button class="tab on" id="sTabEmo" type="button">🎭 Настрій</button>
+      <button class="tab" id="sTabEn" type="button">🔋 Енергія</button>
+      <button class="tab" id="sTabWc" type="button">☁️ Хмара</button>
+      <button class="tab" id="sTabBd" type="button">🖼️ Дошка</button>
+    </div>
+
+    <div class="panel ex-panel" id="exEmo">
+      <h2>Який у тебе настрій?</h2>
+      <p class="sub">Тицьни на смайлик — голос миттєво полетить у клас 💌</p>
+      <div class="emo-grid" id="emoGrid"></div>
+      <div><span class="yay" id="yayEmo">🎉 Клас! Твій голос збережено!</span></div>
+    </div>
+
+    <div class="panel ex-panel" id="exEn" style="display:none">
+      <h2>Мій енергетичний запас</h2>
+      <div class="legend">
+        <span class="leg"><span class="sh sq"></span> на початку уроку</span>
+        <span class="leg"><span class="sh ci"></span> наприкінці уроку</span>
+      </div>
+      <div class="lesson-banner" id="lessonBannerS">⏳ Урок ще не розпочато</div>
+      <div class="bat-grid" id="batGrid"></div>
+      <p class="status-line" id="statusLine"></p>
+    </div>
+
+    <div class="panel ex-panel" id="exWc" style="display:none">
+      <h2>Хмара слів</h2>
+      <p class="wc-question" id="wcQS">❓ Питання з'явиться скоро…</p>
+      <div id="wcClosedS" style="display:none"><span class="wc-closed">🔴 Вчитель закрив прийом слів</span></div>
+      <div class="wc-input-row" id="wcInputRow">
+        <input class="wc-input" id="wcInput" maxlength="24" placeholder="Твоє слово або фраза…">
+        <button class="chunk-btn btn-pink" id="wcAdd" type="button">☁️ Додати</button>
+      </div>
+      <div class="my-chips" id="wcMy"></div>
+      <p class="sub" style="margin-top:6px">Хмара класу наживо 👇</p>
+      <div class="cloud" id="wcCloudS"></div>
+    </div>
+
+    <div class="panel ex-panel" id="exBd" style="display:none">
+      <h2>Спільна дошка малюнків</h2>
+      <p class="wc-question" id="taskS">📝 Завдання з'явиться скоро…</p>
+      <div class="canvas-wrap"><canvas id="drawCanvas" width="640" height="400"></canvas></div>
+      <div class="tools" id="tools">
+        <button class="swatch on" data-c="#1a1a1a" style="background:#1a1a1a" title="Чорний"></button>
+        <button class="swatch" data-c="#e8434c" style="background:#e8434c" title="Червоний"></button>
+        <button class="swatch" data-c="#f7941d" style="background:#f7941d" title="Помаранчевий"></button>
+        <button class="swatch" data-c="#ffd23f" style="background:#ffd23f" title="Жовтий"></button>
+        <button class="swatch" data-c="#3cb549" style="background:#3cb549" title="Зелений"></button>
+        <button class="swatch" data-c="#4cc9f0" style="background:#4cc9f0" title="Блакитний"></button>
+        <button class="swatch" data-c="#b388eb" style="background:#b388eb" title="Фіолетовий"></button>
+        <button class="swatch" data-c="#f78fb3" style="background:#f78fb3" title="Рожевий"></button>
+        <span class="toolsep"></span>
+        <button class="sizebtn" data-s="3" title="Тонко"><i style="width:6px;height:6px"></i></button>
+        <button class="sizebtn on" data-s="7" title="Середньо"><i style="width:11px;height:11px"></i></button>
+        <button class="sizebtn" data-s="14" title="Товсто"><i style="width:17px;height:17px"></i></button>
+        <span class="toolsep"></span>
+        <button class="chunk-btn icon-btn" id="eraserBtn" type="button">🧽 Гумка</button>
+        <button class="chunk-btn icon-btn" id="undoBtn" type="button">↩️ Крок назад</button>
+        <button class="chunk-btn icon-btn btn-red" id="clearBtn" type="button">🧹 Чисто</button>
+      </div>
+      <div class="actions">
+        <button class="chunk-btn btn-pink" id="sendDraw" type="button">📤 Надіслати на дошку</button>
+      </div>
+      <p class="sub" style="margin-top:14px">🖼️ Дошка класу наживо (малюнки підписані) 👇</p>
+      <div class="draw-grid" id="boardGridS"></div>
+    </div>
+
+    <p class="peers" id="peers"></p>
+  </section>
+
+  <!-- ================= TEACHER ================= -->
+  <section class="screen" id="scr-teacher">
+    <div class="topbar">
+      <button class="chunk-btn icon-btn" id="toStudent" type="button">🎒 Вид учня</button>
+      <span class="conn-pill wait" data-conn><i></i> ПІДКЛЮЧЕННЯ…</span>
+    </div>
+    <div class="t-head">
+      <h1>Результати класу наживо ⚡</h1>
+      <span class="room-badge" id="roomBadge"></span>
+    </div>
+
+    <div class="panel timer-panel">
+      <span style="font-weight:900;font-size:14px">⏱️ Таймер уроку:</span>
+      <span class="timer-display" id="timerDisplay">00:00</span>
+      <button class="chunk-btn btn-green" id="startLesson" type="button">🔔 Початок</button>
+      <button class="chunk-btn btn-yellow" id="endLesson" type="button">🛎️ Кінець</button>
+      <button class="chunk-btn" id="resetTimer" type="button">⏱️ Скинути</button>
+    </div>
+
+    <div class="tabs">
+      <button class="tab on" id="tTabEmo" type="button">🎭 Настрій</button>
+      <button class="tab" id="tTabEn" type="button">🔋 Енергія</button>
+      <button class="tab" id="tTabWc" type="button">☁️ Хмара</button>
+      <button class="tab" id="tTabBd" type="button">🖼️ Дошка</button>
+    </div>
+
+    <div class="stats c3" id="statsEmo">
+      <div class="panel stat"><span class="num" id="eTotal">0</span><div class="lbl">🎒 Голосів</div></div>
+      <div class="panel stat"><span class="num" id="eAvg">—</span><div class="lbl">🌡️ Настрій / 5</div></div>
+      <div class="panel stat"><span class="num" id="eTop">—</span><div class="lbl">👑 Лідер</div></div>
+    </div>
+    <div class="stats" id="statsEn" style="display:none">
+      <div class="panel stat"><span class="num" id="nTotal">0</span><div class="lbl">🎒 Учні</div></div>
+      <div class="panel stat"><span class="num" id="nStart">—</span><div class="lbl">⚡ На початку</div></div>
+      <div class="panel stat"><span class="num" id="nEnd">—</span><div class="lbl">🔋 Наприкінці</div></div>
+      <div class="panel stat"><span class="num" id="nDelta">—</span><div class="lbl">📈 Зміна</div></div>
+    </div>
+    <div class="stats c3" id="statsWc" style="display:none">
+      <div class="panel stat"><span class="num" id="wTotal">0</span><div class="lbl">☁️ Слів у хмарі</div></div>
+      <div class="panel stat"><span class="num" id="wUniq">0</span><div class="lbl">Унікальних</div></div>
+      <div class="panel stat"><span class="num" id="wTop">—</span><div class="lbl">👑 Найчастіше</div></div>
+    </div>
+    <div class="stats c2" id="statsBd" style="display:none">
+      <div class="panel stat"><span class="num" id="bTotal">0</span><div class="lbl">🖼️ Малюнків на дошці</div></div>
+      <div class="panel stat"><span class="num" id="bLast">—</span><div class="lbl">🕒 Останній малюнок</div></div>
+    </div>
+
+    <div class="panel wc-panel" id="wcPanel" style="display:none">
+      <h3>✍️ Питання для хмари слів</h3>
+      <input class="wc-q-input" id="wcQInput" maxlength="90" placeholder="Напр.: Яке слово найкраще описує сьогоднішній урок?">
+      <p class="wc-q-hint">💡 Питання миттєво з'явиться в усіх учнів у вкладці «☁️ Хмара».</p>
+      <div class="actions">
+        <button class="chunk-btn btn-green" id="wcToggle" type="button">🟢 Прийом відкрито</button>
+        <button class="chunk-btn btn-red" id="wcClear" type="button">🧹 Очистити хмару</button>
+      </div>
+      <h3 style="margin-top:16px">☁️ Хмара слів класу (наживо)</h3>
+      <div class="cloud" id="wcCloudT"></div>
+    </div>
+
+    <div class="panel board-panel" id="boardPanel" style="display:none">
+      <h3>📝 Завдання для дошки: що намалювати</h3>
+      <input class="wc-q-input" id="taskInput" maxlength="90" placeholder="Напр.: Намалюй, що ти запам'ятав з уроку">
+      <p class="wc-q-hint">💡 Завдання миттєво з'явиться в учнів у вкладці «🖼️ Дошка».</p>
+      <div class="actions">
+        <button class="chunk-btn btn-red" id="boardClear" type="button">🧹 Очистити дошку</button>
+      </div>
+      <h3 style="margin-top:16px">🖼️ Спільна дошка (наживо, з підписами)</h3>
+      <div class="draw-grid" id="boardGridT"></div>
+    </div>
+
+    <div class="panel empty" id="emptyState">
+      <span class="big">🪫</span>
+      Поки що немає голосів...<br>Надішли учням посилання нижче — і все пожвавиться! ⚡
+    </div>
+
+    <div class="grid2" id="dashData" style="display:none">
+      <div class="panel chart-panel" id="chartsPanel">
+        <div id="chartEmo">
+          <h3>🎭 Настрій класу</h3>
+          <div id="emoBars"></div>
+        </div>
+        <div id="chartEn" style="display:none">
+          <h3>🎨 Енергія: початок vs кінець</h3>
+          <div id="grpBars"></div>
+          <h3 style="margin-top:14px">🔋 Кожна батарейка</h3>
+          <div class="strip" id="strip"></div>
+        </div>
+      </div>
+      <div class="panel feed-panel">
+        <h3>⚡ Останні позначки</h3>
+        <ul class="feed" id="feedList"></ul>
+      </div>
+    </div>
+
+    <div class="panel link-panel">
+      <h3>🔗 Посилання</h3>
+      <div class="linkbox">
+        <span class="lb-lbl">🎒 Для учнів:</span>
+        <code id="pupilLink"></code>
+        <button class="chunk-btn btn-blue" id="copyBtn" type="button">📋 Копіювати</button>
+      </div>
+      <div class="linkbox">
+        <span class="lb-lbl">🧑‍🏫 Для вчителя:</span>
+        <code id="teacherLink"></code>
+        <button class="chunk-btn btn-pink" id="copyTBtn" type="button">📋 Копіювати</button>
+      </div>
+      <div class="actions">
+        <button class="chunk-btn" id="demoBtn" type="button">🧪 Демо-голоси</button>
+        <button class="chunk-btn btn-pink" id="pngBtn" type="button">🖼️ Картинка</button>
+        <button class="chunk-btn btn-yellow" id="pdfBtn" type="button">📄 PDF</button>
+        <button class="chunk-btn btn-red" id="resetBtn" type="button">🧹 Очистити все</button>
+      </div>
+      <p class="small-note">✨ Чотири вправи: настрій, енергія, хмара слів, дошка малюнків. Завдання дошки й питання хмари вчитель пише сам — вони миттєво в учнів. Усе синхронізовано наживо (MQTT), працює в GidHub та iframe.</p>
+    </div>
+  </section>
+
+</div>
+<div id="toast"></div>
+
+<script>
+(function(){
+'use strict';
+/* ================= ДАНІ ================= */
+var EMOS=[
+  {id:'great',emoji:'🤩',label:'Чудово',color:'#ffb703',tint:'#fff1cf',score:5},
+  {id:'good',emoji:'😊',label:'Добре',color:'#3cb549',tint:'#d5f8ec',score:4},
+  {id:'ok',emoji:'😎',label:'Нормально',color:'#4cc9f0',tint:'#ddf4fd',score:3},
+  {id:'sad',emoji:'😔',label:'Сумно',color:'#b388eb',tint:'#efe4fb',score:2},
+  {id:'anxious',emoji:'😰',label:'Тривожно',color:'#ef476f',tint:'#fddbe4',score:1}
+];
+var EB={};EMOS.forEach(function(e){EB[e.id]=e;});
+var YAYS=['🎉 Клас! Твій голос збережено!','💛 Дякуємо! Ти супер!','🚀 Голос полетів до вчителя!','⭐ Твій настрій важливий!','🙌 Так тримати!'];
+var WC_COLORS=['#e8434c','#f7941d','#3cb549','#4cc9f0','#b388eb','#d6336c','#0e8a6d','#1a1a1a'];
+var INK='#1a1a1a';
+var LEVELS={full:{y:34,h:152,c:'#3cb549',score:3,name:'Повний заряд'},
+            mid:{y:100,h:86,c:'#e6d84a',score:2,name:'Середній заряд'},
+            low:{y:146,h:40,c:'#e8434c',score:1,name:'Низький заряд'}};
+function dot(x,y){return '<circle cx="'+x+'" cy="'+y+'" r="4.5" fill="'+INK+'"/>';}
+function hap(x,y){return '<path d="M'+(x-8)+' '+(y+2)+' Q'+x+' '+(y-8)+' '+(x+8)+' '+(y+2)+'" fill="none" stroke="'+INK+'" stroke-width="4" stroke-linecap="round"/>';}
+function sadE(x,y,s){return dot(x,y)+'<path d="M'+(x-9*s)+' '+(y-13)+' L'+(x+7*s)+' '+(y-8)+'" stroke="'+INK+'" stroke-width="4" stroke-linecap="round" fill="none"/>';}
+function sqz(x,y,s){return '<path d="M'+(x-8*s)+' '+(y-5)+' L'+(x+2*s)+' '+y+' L'+(x-8*s)+' '+(y+5)+'" fill="none" stroke="'+INK+'" stroke-width="4" stroke-linecap="round"/>';}
+function spr(x,y){return '<path d="M'+(x+7)+' '+y+' a7 7 0 1 0 -7 7 a5 5 0 1 0 5 -5 a3 3 0 1 0 -3 3" fill="none" stroke="'+INK+'" stroke-width="3.5" stroke-linecap="round"/>';}
+function cryE(x,y){return hap(x,y)+'<path d="M'+x+' '+(y+5)+' q-4 9 0 16" stroke="#59b7f0" stroke-width="4.5" fill="none" stroke-linecap="round"/>';}
+var M={
+ kiss:function(x,y){return '<path d="M'+x+' '+y+' q5 3 0 6 q5 3 0 6" fill="none" stroke="'+INK+'" stroke-width="4" stroke-linecap="round"/>';},
+ cat:function(x,y){return '<path d="M'+(x-9)+' '+y+' q4.5 7 9 0 q4.5 7 9 0" fill="none" stroke="'+INK+'" stroke-width="4" stroke-linecap="round"/>';},
+ o:function(x,y){return '<ellipse cx="'+x+'" cy="'+(y+4)+'" rx="5" ry="6.5" fill="'+INK+'"/>';},
+ grin:function(x,y){return '<path d="M'+(x-13)+' '+y+' a13 11 0 0 0 26 0 z" fill="#fff" stroke="'+INK+'" stroke-width="4"/><path d="M'+(x-8)+' '+(y+5)+' h16" stroke="'+INK+'" stroke-width="3"/>';},
+ smile:function(x,y){return '<path d="M'+(x-9)+' '+y+' q9 8 18 0" fill="none" stroke="'+INK+'" stroke-width="4" stroke-linecap="round"/>';},
+ frown:function(x,y){return '<path d="M'+(x-9)+' '+(y+6)+' q9 -9 18 0" fill="none" stroke="'+INK+'" stroke-width="4" stroke-linecap="round"/>';},
+ wavy:function(x,y){return '<path d="M'+(x-12)+' '+(y+3)+' q4 -6 8 0 q4 6 8 0 q4 -6 8 0" fill="none" stroke="'+INK+'" stroke-width="4" stroke-linecap="round"/>';},
+ open:function(x,y){return '<path d="M'+(x-8)+' '+y+' a8 7 0 0 0 16 0 z" fill="#f8a5c2" stroke="'+INK+'" stroke-width="4"/>';},
+ yawn:function(x,y){return '<ellipse cx="'+x+'" cy="'+(y+5)+'" rx="7" ry="9" fill="#f8a5c2" stroke="'+INK+'" stroke-width="4"/><ellipse cx="'+x+'" cy="'+(y+9)+'" rx="4" ry="3" fill="#e26a8f"/>';},
+ tongue:function(x,y){return '<path d="M'+(x-8)+' '+y+' a8 6 0 0 0 16 0 z" fill="'+INK+'"/><path d="M'+(x+1)+' '+y+' q6 8 -2 10 q-5 1 -4 -6" fill="#f8a5c2" stroke="'+INK+'" stroke-width="3"/>';}
+};
+var blush='<circle cx="46" cy="86" r="6" fill="#f78fb3" opacity=".8"/><circle cx="94" cy="86" r="6" fill="#f78fb3" opacity=".8"/>';
+var sparkle='<path d="M98 54 l3 7 7 3 -7 3 -3 7 -3 -7 -7 -3 7 -3 z" fill="#ffd23f"/>';
+var drop='<path d="M104 50 q9 13 0 17 q-9 -4 0 -17 z" fill="#7ec8ff" stroke="'+INK+'" stroke-width="3"/>';
+var heartH='<path d="M70 140 c-11 -9 -15 -15 -9 -20 c4 -3 9 0 9 4 c0 -4 5 -7 9 -4 c6 5 2 11 -9 20 z" fill="#f8a5c2" stroke="'+INK+'" stroke-width="3.5"/>';
+var spirTop='<path d="M34 20 a6 6 0 1 0 -6 6" fill="none" stroke="'+INK+'" stroke-width="3.5" stroke-linecap="round"/><path d="M110 20 a6 6 0 1 1 6 6" fill="none" stroke="'+INK+'" stroke-width="3.5" stroke-linecap="round"/>';
+var shiver='<path d="M14 96 l-8 -5 M14 110 l-9 0 M126 96 l8 -5 M126 110 l9 0" stroke="'+INK+'" stroke-width="3.5" stroke-linecap="round"/>';
+var zapBub='<circle cx="122" cy="38" r="15" fill="#fff" stroke="'+INK+'" stroke-width="4"/><path d="M112 50 l-6 8 10 -3 z" fill="#fff" stroke="'+INK+'" stroke-width="3"/><path d="M124 28 l-7 11 h5 l-4 10 10 -12 h-5 l6 -9 z" fill="#35b558"/>';
+var emph='<path d="M136 44 l7 -6 M139 54 l9 -2 M133 36 l4 -8" stroke="'+INK+'" stroke-width="3.5" stroke-linecap="round"/>';
+var G='<g stroke="'+INK+'" stroke-width="5" fill="none" stroke-linecap="round">';
+var ARMS={
+ heart:G+'<path d="M28 108 Q8 118 36 130"/><path d="M112 108 Q132 118 104 130"/></g>'+heartH,
+ peace:G+'<path d="M28 92 Q8 74 16 52"/><path d="M16 52 l-7 -11"/><path d="M16 52 l7 -11"/><path d="M112 92 Q132 74 124 52"/><path d="M124 52 l-7 -11"/><path d="M124 52 l7 -11"/></g>',
+ flex:G+'<path d="M28 100 Q4 96 8 70"/><path d="M112 100 Q136 96 132 70"/></g><circle cx="8" cy="63" r="7" fill="'+INK+'"/><circle cx="132" cy="63" r="7" fill="'+INK+'"/>',
+ hips:G+'<path d="M28 102 L10 120 L28 136"/><path d="M112 102 L130 120 L112 136"/></g>',
+ point:G+'<path d="M28 104 L14 124"/><path d="M112 96 Q134 82 130 60"/><path d="M130 60 l3 -12"/></g>'+emph,
+ droop:G+'<path d="M28 112 Q16 142 12 162"/><path d="M112 112 Q124 142 128 162"/></g>',
+ head:G+'<path d="M28 84 Q8 62 30 42"/><path d="M112 84 Q132 62 110 42"/></g>'+spirTop,
+ hug:G+'<path d="M28 118 Q48 142 66 133"/><path d="M112 118 Q92 142 74 133"/></g>',
+ sweat:G+'<path d="M28 112 Q18 140 16 158"/><path d="M112 88 Q132 72 120 50"/></g>'+drop,
+ headOne:G+'<path d="M28 112 Q16 140 14 158"/><path d="M112 84 Q132 62 110 42"/></g>',
+ cry:G+'<path d="M28 92 Q8 72 14 48"/><path d="M14 48 l-6 -8"/><path d="M112 92 Q132 72 126 48"/><path d="M126 48 l6 -8"/></g>'
+};
+var FACES={
+ kiss:hap(54,70)+hap(86,70)+M.kiss(70,84)+blush,
+ wink:dot(54,70)+hap(86,70)+M.cat(70,86)+sparkle,
+ wow:dot(54,70)+dot(86,70)+M.o(70,84),
+ grin:hap(54,70)+hap(86,70)+M.grin(70,84)+sparkle,
+ smile:dot(54,70)+dot(86,70)+M.smile(70,86),
+ sad:sadE(54,70,1)+sadE(86,70,-1)+M.frown(70,86),
+ dizzy:sadE(54,70,1)+sadE(86,70,-1)+M.wavy(70,88),
+ yawn:sqz(54,70,1)+sqz(86,70,-1)+M.yawn(70,82)+shiver,
+ tired:sadE(54,70,1)+sadE(86,70,-1)+M.tongue(70,86),
+ spiral:spr(54,70)+spr(86,70)+M.wavy(70,90),
+ worried:sadE(54,70,1)+sadE(86,70,-1)+M.open(70,86),
+ cry:cryE(54,68)+cryE(86,68)+M.open(70,88)
+};
+var BATS=[
+ {id:'b1',lvl:'full',face:'kiss',arms:'heart',label:'Повен любові'},
+ {id:'b2',lvl:'full',face:'wink',arms:'peace',label:'На підйомі'},
+ {id:'b3',lvl:'full',face:'wow',arms:'flex',label:'Сила буяє'},
+ {id:'b4',lvl:'full',face:'grin',arms:'hips',label:'Усі задоволені'},
+ {id:'b5',lvl:'full',face:'smile',arms:'point',label:'Готовий діяти'},
+ {id:'b6',lvl:'mid',face:'sad',arms:'droop',label:'Трохи підсів'},
+ {id:'b7',lvl:'mid',face:'dizzy',arms:'head',label:'Запаморочення'},
+ {id:'b8',lvl:'mid',face:'yawn',arms:'hug',label:'Позіхаю'},
+ {id:'b9',lvl:'mid',face:'tired',arms:'sweat',label:'На межі'},
+ {id:'b10',lvl:'low',face:'spiral',arms:'headOne',label:'Геть знесилений'},
+ {id:'b11',lvl:'low',face:'worried',arms:'hug',label:'Тривога',extra:zapBub},
+ {id:'b12',lvl:'low',face:'cry',arms:'cry',label:'На нулі'}
+];
+var BB={};BATS.forEach(function(b){BB[b.id]=b;});
+function batSVG(b){
+  var L=LEVELS[b.lvl];
+  return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 210">'+
+   '<ellipse cx="70" cy="203" rx="34" ry="5" fill="rgba(0,0,0,.10)"/>'+
+   '<rect x="52" y="6" width="36" height="16" rx="5" fill="#fff" stroke="'+INK+'" stroke-width="5"/>'+
+   '<rect x="28" y="22" width="84" height="176" rx="16" fill="#fff" stroke="'+INK+'" stroke-width="5"/>'+
+   '<rect x="36" y="'+L.y+'" width="68" height="'+L.h+'" rx="10" fill="'+L.c+'"/>'+
+   '<path d="M100 40 v10 M95 45 h10" stroke="'+INK+'" stroke-width="3.5" stroke-linecap="round"/>'+
+   '<path d="M95 186 h10" stroke="'+INK+'" stroke-width="3.5" stroke-linecap="round"/>'+
+   '<path d="M50 168 l-5 10 h5 l-4 9 9 -11 h-5 l5 -8 z" fill="'+INK+'"/>'+
+   (ARMS[b.arms]||'')+(FACES[b.face]||'')+(b.extra||'')+'</svg>';
+}
+
+/* ================= СХОВИЩЕ ================= */
+var mem={};
+function sGet(k){try{return sessionStorage.getItem(k);}catch(e){return mem[k]||null;}}
+function sSet(k,v){try{sessionStorage.setItem(k,v);}catch(e){mem[k]=v;}}
+function lGet(k){try{return localStorage.getItem(k);}catch(e){return mem[k]||null;}}
+function lSet(k,v){try{localStorage.setItem(k,v);}catch(e){mem[k]=v;}}
+function $(id){return document.getElementById(id);}
+function ask(m){try{return confirm(m);}catch(e){return true;}}
+
+var current='student',votes={},words={},draws={};
+var my={emo:null,start:null,end:null};
+var meta={start:null,end:null,wq:'',wopen:true,task:''};
+var metaReceived=false;
+
+function hashStr(s){var h=5381;for(var i=0;i<s.length;i++){h=((h<<5)+h+s.charCodeAt(i))|0;}return Math.abs(h).toString(36);}
+var params=new URLSearchParams(location.search);
+var room=params.get('room')||('k'+hashStr((location.hostname||'')+(location.pathname||'/')));
+$('roomBadge').textContent='🏠 '+room;
+function baseLink(){var o=location.origin;if(!o||o==='null')o='';return o+location.pathname+'?room='+room;}
+function teacherLink(){return baseLink()+'&role=teacher';}
+try{if(window.self!==window.top){var os=$('openSep');os.style.display='inline-block';os.href=baseLink();}}catch(e){}
+var clientId=sGet('energomat_cid');
+if(!clientId){clientId='u_'+Math.random().toString(36).slice(2,10)+Date.now().toString(36);sSet('energomat_cid',clientId);}
+
+try{
+  var lm=JSON.parse(lGet('energomat_meta_'+room));
+  if(lm&&typeof lm==='object')meta={start:lm.start||null,end:lm.end||null,wq:(typeof lm.wq==='string')?lm.wq:'',wopen:(lm.wopen===false)?false:true,task:(typeof lm.task==='string')?lm.task:''};
+}catch(e){}
+function saveMetaLocal(){lSet('energomat_meta_'+room,JSON.stringify(meta));}
+
+/* ================= MQTT ================= */
+var TOPIC='energomat/v4/'+room+'/vote/';
+var TOPIC_W='energomat/v4/'+room+'/word/';
+var TOPIC_D='energomat/v4/'+room+'/draw/';
+var META='energomat/v4/'+room+'/meta';
+var client=null,online=false;
+function setConn(s){
+  var p=document.querySelectorAll('[data-conn]');
+  for(var i=0;i<p.length;i++){
+    p[i].classList.remove('on','wait','off');
+    if(s==='on'){p[i].classList.add('on');p[i].innerHTML='<i></i> НАЖИВО';}
+    else if(s==='off'){p[i].classList.add('off');p[i].innerHTML='<i></i> ОФЛАЙН';}
+    else{p[i].classList.add('wait');p[i].innerHTML='<i></i> З\u0027ЄДНАННЯ…';}
+  }
+}
+function applyMsg(topic,payload){
+  var t=payload.toString();
+  if(topic===META){
+    metaReceived=true;
+    try{var m=JSON.parse(t);meta={start:m.start||null,end:m.end||null,wq:(typeof m.wq==='string')?m.wq:'',wopen:(m.wopen===false)?false:true,task:(typeof m.task==='string')?m.task:''};}
+    catch(e){meta={start:null,end:null,wq:'',wopen:true,task:''};}
+    saveMetaLocal();updateTimerUI();updateWcUI();updateBoardUI();return;
+  }
+  if(topic.indexOf(TOPIC_W)===0){
+    var wid=topic.slice(TOPIC_W.length);
+    if(!t)delete words[wid];
+    else{try{var d=JSON.parse(t);if(d&&d.word)words[wid]=d;}catch(e){}}
+    refreshAll();return;
+  }
+  if(topic.indexOf(TOPIC_D)===0){
+    var did=topic.slice(TOPIC_D.length);
+    if(!t)delete draws[did];
+    else{try{var dr=JSON.parse(t);if(dr&&dr.img)draws[did]=dr;}catch(e){}}
+    refreshAll();
+    if(current==='student'&&sEx==='board')renderBoard($('boardGridS'),'student');
+    return;
+  }
+  if(topic.indexOf(TOPIC)!==0)return;
+  var id=topic.slice(TOPIC.length);
+  if(!t)delete votes[id];
+  else{try{var v=JSON.parse(t);if(v&&typeof v==='object')votes[id]=v;}catch(e){}}
+  refreshAll();
+}
+function connect(){
+  if(typeof mqtt==='undefined'){setConn('off');return;}
+  var brokers=['wss://mqtt.eclipseprojects.io:443/mqtt','wss://broker.emqx.io:8084/mqtt','wss://test.mosquitto.org:8081/mqtt'];
+  var bi=0;
+  (function tryNext(){
+    if(bi>=brokers.length){setConn('off');toast('⚠️ Немає з\u0027єднання з сервером');return;}
+    var c,done=false;
+    try{c=mqtt.connect(brokers[bi],{clientId:'en_'+Math.random().toString(36).slice(2,9),clean:true,connectTimeout:8000,reconnectPeriod:3000,keepalive:30});}
+    catch(e){bi++;setTimeout(tryNext,400);return;}
+    var to=setTimeout(function(){if(!done){try{c.end();}catch(e){}bi++;tryNext();}},8000);
+    c.on('connect',function(){
+      done=true;clearTimeout(to);client=c;online=true;setConn('on');
+      c.subscribe([TOPIC+'+',TOPIC_W+'+',TOPIC_D+'+',META],{qos:0});
+      publishMe();refreshAll();updateTimerUI();updateWcUI();updateBoardUI();
+      if(current==='student'&&sEx==='board')renderBoard($('boardGridS'),'student');
+      setTimeout(function(){if(!metaReceived&&(meta.wq||meta.start||meta.task)){publishMeta();}},1500);
+    });
+    c.on('reconnect',function(){setConn('wait');});
+    c.on('offline',function(){online=false;setConn('off');});
+    c.on('error',function(){if(!done){clearTimeout(to);try{c.end();}catch(e){}bi++;setTimeout(tryNext,400);}});
+    c.on('message',applyMsg);
+  })();
+}
+function publishMe(){
+  if(!online||!client)return;
+  client.publish(TOPIC+clientId,JSON.stringify({name:$('pupilName').value.trim(),emo:my.emo,start:my.start,end:my.end,ts:Date.now()}),{retain:true,qos:0});
+}
+function publishMeta(){
+  saveMetaLocal();
+  if(online&&client)client.publish(META,JSON.stringify(meta),{retain:true,qos:0});
+  updateTimerUI();updateWcUI();updateBoardUI();
+}
+
+/* ================= РОЛІ / ТАБИ ================= */
+function setRole(r){try{var u=new URL(location.href);if(r==='teacher')u.searchParams.set('role','teacher');else u.searchParams.delete('role');history.replaceState(null,'',u);}catch(e){}}
+function show(n){
+  current=n;
+  $('scr-student').classList.toggle('active',n==='student');
+  $('scr-teacher').classList.toggle('active',n==='teacher');
+  window.scrollTo(0,0);
+  if(n==='teacher'){$('pupilLink').textContent=baseLink();$('teacherLink').textContent=teacherLink();setTeacherEx(tEx);renderTeacher();updateTimerUI();updateWcUI();updateBoardUI();}
+  if(n==='student'){restoreMe();updateStatus();updatePeers();updateTimerUI();updateWcUI();updateBoardUI();renderStudentCloud();renderBoard($('boardGridS'),'student');}
+}
+$('toTeacher').onclick=function(){setRole('teacher');show('teacher');};
+$('toStudent').onclick=function(){setRole(null);show('student');};
+var sEx='emo',tEx='emo';
+function setStudentEx(ex){
+  sEx=ex;
+  $('sTabEmo').classList.toggle('on',ex==='emo');$('sTabEn').classList.toggle('on',ex==='energy');$('sTabWc').classList.toggle('on',ex==='cloud');$('sTabBd').classList.toggle('on',ex==='board');
+  $('exEmo').style.display=ex==='emo'?'block':'none';
+  $('exEn').style.display=ex==='energy'?'block':'none';
+  $('exWc').style.display=ex==='cloud'?'block':'none';
+  $('exBd').style.display=ex==='board'?'block':'none';
+  if(ex==='cloud')renderStudentCloud();
+  if(ex==='board')renderBoard($('boardGridS'),'student');
+}
+$('sTabEmo').onclick=function(){setStudentEx('emo');};
+$('sTabEn').onclick=function(){setStudentEx('energy');};
+$('sTabWc').onclick=function(){setStudentEx('cloud');};
+$('sTabBd').onclick=function(){setStudentEx('board');};
+function setTeacherEx(ex){
+  tEx=ex;
+  $('tTabEmo').classList.toggle('on',ex==='emo');$('tTabEn').classList.toggle('on',ex==='energy');$('tTabWc').classList.toggle('on',ex==='cloud');$('tTabBd').classList.toggle('on',ex==='board');
+  $('statsEmo').style.display=ex==='emo'?'grid':'none';
+  $('statsEn').style.display=ex==='energy'?'grid':'none';
+  $('statsWc').style.display=ex==='cloud'?'grid':'none';
+  $('statsBd').style.display=ex==='board'?'grid':'none';
+  $('wcPanel').style.display=ex==='cloud'?'block':'none';
+  $('boardPanel').style.display=ex==='board'?'block':'none';
+  $('chartEmo').style.display=ex==='emo'?'block':'none';
+  $('chartEn').style.display=ex==='energy'?'block':'none';
+  $('chartsPanel').style.display=(ex==='cloud'||ex==='board')?'none':'block';
+  $('dashData').style.gridTemplateColumns=(ex==='cloud'||ex==='board')?'1fr':'';
+  renderTeacher();
+}
+$('tTabEmo').onclick=function(){setTeacherEx('emo');};
+$('tTabEn').onclick=function(){setTeacherEx('energy');};
+$('tTabWc').onclick=function(){setTeacherEx('cloud');};
+$('tTabBd').onclick=function(){setTeacherEx('board');};
+
+/* ================= ТАЙМЕР ================= */
+function fmtDur(ms){var s=Math.max(0,Math.floor(ms/1000));var h=Math.floor(s/3600),m=Math.floor((s%3600)/60),ss=s%60;var p=function(n){return (n<10?'0':'')+n;};return h>0?(h+':'+p(m)+':'+p(ss)):(p(m)+':'+p(ss));}
+function lessonState(){if(!meta.start)return 'idle';if(!meta.end)return 'run';return 'done';}
+function updateTimerUI(){
+  var st=lessonState(),now=Date.now();
+  var dur=meta.start?((meta.end||now)-meta.start):0;
+  var td=$('timerDisplay');td.textContent=fmtDur(dur);
+  td.classList.toggle('run',st==='run');td.classList.toggle('done',st==='done');
+  var b=$('lessonBannerS');
+  b.classList.toggle('run',st==='run');b.classList.toggle('done',st==='done');
+  if(st==='idle')b.textContent='⏳ Урок ще не розпочато — познач стартовий заряд ■';
+  else if(st==='run')b.textContent='🔔 Урок іде: '+fmtDur(dur)+' — наприкінці познач ○';
+  else b.textContent='🛎️ Урок завершено (тривав '+fmtDur(dur)+') — познач ○';
+}
+setInterval(updateTimerUI,1000);
+$('startLesson').onclick=function(){meta.start=Date.now();meta.end=null;publishMeta();toast('🔔 Урок розпочато!');};
+$('endLesson').onclick=function(){if(!meta.start){toast('⚠️ Спершу «Початок»');return;}meta.end=Date.now();publishMeta();toast('🛎️ Урок завершено!');};
+$('resetTimer').onclick=function(){meta.start=null;meta.end=null;publishMeta();toast('⏱️ Таймер скинуто');};
+
+/* ================= ХМАРА СЛІВ ================= */
+function wordCounts(){
+  var c={};
+  for(var id in words){
+    var w=words[id];if(!w||!w.word)continue;
+    var key=w.word.trim().toLowerCase();if(!key)continue;
+    if(!c[key])c[key]={c:0,disp:w.word.trim()};
+    c[key].c++;
+  }
+  return c;
+}
+function renderCloud(el,counts,limit){
+  el.innerHTML='';
+  var arr=[];for(var k in counts)arr.push({k:k,c:counts[k].c,disp:counts[k].disp});
+  arr.sort(function(a,b){return b.c-a.c;});
+  arr=arr.slice(0,limit||60);
+  if(!arr.length){el.innerHTML='<span style="font-weight:800;color:#6b6488;font-size:15px">Поки порожньо… Слова учнів з\u0027являться тут ☁️</span>';return;}
+  var max=arr[0].c;
+  arr.forEach(function(w,i){
+    var sp=document.createElement('span');
+    var size=18+((w.c-1)/Math.max(1,max-1))*44;
+    sp.textContent=w.disp+(w.c>1?' ⁺'+w.c:'');
+    sp.style.fontSize=size.toFixed(0)+'px';
+    sp.style.color=WC_COLORS[(w.k.length+i)%WC_COLORS.length];
+    sp.style.transform='rotate('+(((w.k.charCodeAt(0)*7)%11)-5)+'deg)';
+    sp.style.animationDelay=(i*0.03)+'s';
+    sp.title=w.c+' голос(ів)';
+    el.appendChild(sp);
+  });
+}
+function updateWcUI(){
+  var q=meta.wq||'';
+  $('wcQS').textContent=q?('❓ '+q):'❓ Питання з\u0027явиться скоро…';
+  var open=meta.wopen!==false;
+  $('wcClosedS').style.display=open?'none':'block';
+  $('wcInputRow').style.display=open?'flex':'none';
+  var tg=$('wcToggle');
+  tg.textContent=open?'🟢 Прийом відкрито':'🔴 Прийом закрито';
+  tg.className='chunk-btn '+(open?'btn-green':'btn-red');
+  if(document.activeElement!==$('wcQInput'))$('wcQInput').value=q;
+  renderMyChips();
+}
+function renderMyChips(){
+  var box=$('wcMy');box.innerHTML='';
+  for(var id in words){
+    var w=words[id];
+    if(!w||w.cid!==clientId)continue;
+    var ch=document.createElement('span');ch.className='chip';
+    ch.textContent=w.word;
+    var x=document.createElement('button');x.type='button';x.textContent='✕';x.title='Прибрати слово';
+    (function(wid){x.onclick=function(){if(online&&client)client.publish(TOPIC_W+wid,'',{retain:true,qos:0});delete words[wid];refreshAll();renderMyChips();renderStudentCloud();};})(id);
+    ch.appendChild(x);box.appendChild(ch);
+  }
+}
+function addMyWord(){
+  if(meta.wopen===false){toast('🔴 Прийом слів закрито');return;}
+  var v=$('wcInput').value.trim().slice(0,24);
+  if(!v){toast('✏️ Впиши слово спершу!');return;}
+  var mine=0;for(var id in words){if(words[id]&&words[id].cid===clientId)mine++;}
+  if(mine>=5){toast('⚠️ Максимум 5 слів від одного учня');return;}
+  var wid=clientId+'_w'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+  var d={cid:clientId,word:v,name:$('pupilName').value.trim(),ts:Date.now()};
+  words[wid]=d;
+  if(online&&client)client.publish(TOPIC_W+wid,JSON.stringify(d),{retain:true,qos:0});
+  $('wcInput').value='';
+  refreshAll();renderMyChips();renderStudentCloud();
+  confetti($('wcAdd'));
+}
+$('wcAdd').onclick=addMyWord;
+$('wcInput').addEventListener('keydown',function(e){if(e.key==='Enter')addMyWord();});
+function renderStudentCloud(){renderCloud($('wcCloudS'),wordCounts(),40);}
+var wcDebounce=null;
+$('wcQInput').addEventListener('input',function(){
+  clearTimeout(wcDebounce);
+  wcDebounce=setTimeout(function(){meta.wq=$('wcQInput').value.trim();publishMeta();toast('✍️ Питання надіслано учням!');},600);
+});
+$('wcToggle').onclick=function(){meta.wopen=(meta.wopen===false)?true:false;publishMeta();toast(meta.wopen?'🟢 Прийом слів відкрито':'🔴 Прийом слів закрито');};
+$('wcClear').onclick=function(){
+  if(!ask('Очистити хмару слів?'))return;
+  var ids=Object.keys(words);
+  if(online&&client)ids.forEach(function(id){client.publish(TOPIC_W+id,'',{retain:true,qos:0});});
+  words={};refreshAll();renderStudentCloud();toast('🧹 Хмару очищено!');
+};
+
+/* ================= ДОШКА МАЛЮНКІВ ================= */
+var dCanvas=$('drawCanvas'),dCtx=dCanvas.getContext('2d');
+var strokes=[],curStroke=null,curColor='#1a1a1a',curSize=7,eraser=false;
+function redrawAll(){
+  dCtx.fillStyle='#fff';dCtx.fillRect(0,0,dCanvas.width,dCanvas.height);
+  strokes.forEach(function(s){drawStroke(s);});
+}
+function drawStroke(s){
+  if(!s.pts.length)return;
+  dCtx.strokeStyle=s.color;dCtx.lineWidth=s.size;dCtx.lineCap='round';dCtx.lineJoin='round';
+  dCtx.beginPath();
+  dCtx.moveTo(s.pts[0][0],s.pts[0][1]);
+  for(var i=1;i<s.pts.length;i++)dCtx.lineTo(s.pts[i][0],s.pts[i][1]);
+  if(s.pts.length===1)dCtx.lineTo(s.pts[0][0]+0.1,s.pts[0][1]);
+  dCtx.stroke();
+}
+redrawAll();
+function ptFromEvent(e){
+  var r=dCanvas.getBoundingClientRect();
+  return [(e.clientX-r.left)*(dCanvas.width/r.width),(e.clientY-r.top)*(dCanvas.height/r.height)];
+}
+dCanvas.addEventListener('pointerdown',function(e){
+  e.preventDefault();
+  try{dCanvas.setPointerCapture(e.pointerId);}catch(err){}
+  curStroke={color:eraser?'#ffffff':curColor,size:eraser?curSize*2:curSize,pts:[ptFromEvent(e)]};
+  drawStroke(curStroke);
+});
+dCanvas.addEventListener('pointermove',function(e){
+  if(!curStroke)return;
+  var p=ptFromEvent(e);
+  var prev=curStroke.pts[curStroke.pts.length-1];
+  curStroke.pts.push(p);
+  dCtx.strokeStyle=curStroke.color;dCtx.lineWidth=curStroke.size;dCtx.lineCap='round';dCtx.lineJoin='round';
+  dCtx.beginPath();dCtx.moveTo(prev[0],prev[1]);dCtx.lineTo(p[0],p[1]);dCtx.stroke();
+});
+function endStroke(){ if(curStroke){strokes.push(curStroke);curStroke=null;} }
+dCanvas.addEventListener('pointerup',endStroke);
+dCanvas.addEventListener('pointercancel',endStroke);
+dCanvas.addEventListener('contextmenu',function(e){e.preventDefault();});
+
+var tools=$('tools');
+tools.addEventListener('click',function(e){
+  var sw=e.target.closest('.swatch');
+  if(sw){
+    curColor=sw.dataset.c;eraser=false;
+    tools.querySelectorAll('.swatch').forEach(function(x){x.classList.toggle('on',x===sw);});
+    $('eraserBtn').classList.remove('btn-blue');
+    return;
+  }
+  var sb=e.target.closest('.sizebtn');
+  if(sb){
+    curSize=parseInt(sb.dataset.s,10);
+    tools.querySelectorAll('.sizebtn').forEach(function(x){x.classList.toggle('on',x===sb);});
+  }
+});
+$('eraserBtn').onclick=function(){
+  eraser=!eraser;
+  $('eraserBtn').classList.toggle('btn-blue',eraser);
+  toast(eraser?'🧽 Гумка увімкнена':'🖌️ Пеник увімкнено');
+};
+$('undoBtn').onclick=function(){ strokes.pop();redrawAll(); };
+$('clearBtn').onclick=function(){ strokes=[];redrawAll(); };
+$('sendDraw').onclick=function(){
+  if(!strokes.length){toast('✏️ Спершу намалюй щось!');return;}
+  var tmp=document.createElement('canvas');tmp.width=320;tmp.height=200;
+  var tc=tmp.getContext('2d');
+  tc.fillStyle='#fff';tc.fillRect(0,0,320,200);
+  tc.drawImage(dCanvas,0,0,320,200);
+  var img=tmp.toDataURL('image/jpeg',0.7);
+  if(img.length>60000)img=tmp.toDataURL('image/jpeg',0.5);
+  var d={cid:clientId,name:($('pupilName').value.trim()||'Учень'),img:img,ts:Date.now()};
+  draws[clientId]=d;
+  if(online&&client)client.publish(TOPIC_D+clientId,JSON.stringify(d),{retain:true,qos:0});
+  refreshAll();renderBoard($('boardGridS'),'student');
+  confetti($('sendDraw'));
+  toast('🖼️ Малюнок підписаний і на дошці!');
+};
+function updateBoardUI(){
+  var t=meta.task||'';
+  $('taskS').textContent=t?('📝 '+t):'📝 Завдання з\u0027явиться скоро…';
+  if(document.activeElement!==$('taskInput'))$('taskInput').value=t;
+}
+var taskDebounce=null;
+$('taskInput').addEventListener('input',function(){
+  clearTimeout(taskDebounce);
+  taskDebounce=setTimeout(function(){meta.task=$('taskInput').value.trim();publishMeta();toast('📝 Завдання надіслано учням!');},600);
+});
+$('boardClear').onclick=function(){
+  if(!ask('Очистити дошку від усіх малюнків?'))return;
+  var ids=Object.keys(draws);
+  if(online&&client)ids.forEach(function(id){client.publish(TOPIC_D+id,'',{retain:true,qos:0});});
+  draws={};refreshAll();renderBoard($('boardGridS'),'student');toast('🧹 Дошку очищено!');
+};
+function renderBoard(el,mode){
+  el.innerHTML='';
+  var arr=[];for(var id in draws){if(draws[id])arr.push(draws[id]);}
+  arr.sort(function(a,b){return (b.ts||0)-(a.ts||0);});
+  if(!arr.length){el.innerHTML='<span style="font-weight:800;color:#6b6488;font-size:14px;grid-column:1/-1">Поки порожньо… Перші малюнки з\u0027являться тут 🖼️</span>';return;}
+  arr.forEach(function(d){
+    var card=document.createElement('div');
+    card.className='draw-card'+(d.cid===clientId?' mine':'');
+    var img=document.createElement('img');img.src=d.img;img.alt='Малюнок: '+d.name;
+    var sig=document.createElement('div');sig.className='sig';
+    var nm=document.createElement('span');nm.textContent='✍️ '+d.name;
+    var tm=document.createElement('span');tm.className='tm';tm.textContent=d.ts?fmtTime(d.ts):'';
+    sig.appendChild(nm);sig.appendChild(tm);
+    card.appendChild(img);card.appendChild(sig);
+    var canDel=(mode==='teacher')||(mode==='student'&&d.cid===clientId);
+    if(canDel){
+      var x=document.createElement('button');x.className='del';x.type='button';x.textContent='✕';x.title='Прибрати малюнок';
+      (function(cid){x.onclick=function(){
+        if(online&&client)client.publish(TOPIC_D+cid,'',{retain:true,qos:0});
+        delete draws[cid];refreshAll();
+        if(current==='student')renderBoard($('boardGridS'),'student');
+      };})(d.cid);
+      card.appendChild(x);
+    }
+    el.appendChild(card);
+  });
+}
+
+/* ================= STUDENT: вправа 1 ================= */
+var emoGrid=$('emoGrid');
+EMOS.forEach(function(e){
+  var b=document.createElement('button');
+  b.type='button';b.className='emo-card';b.style.setProperty('--tint',e.tint);
+  b.innerHTML='<span class="star">⭐</span><span class="face">'+e.emoji+'</span><span class="lbl">'+e.label+'</span>';
+  b.onclick=function(){
+    my.emo=(my.emo===e.id)?null:e.id;
+    paintEmo();saveMe();confetti(b);
+    if(my.emo){var y=$('yayEmo');y.textContent=YAYS[Math.floor(Math.random()*YAYS.length)];y.classList.remove('show');void y.offsetWidth;y.classList.add('show');}
+  };
+  emoGrid.appendChild(b);
+});
+function paintEmo(){var k=emoGrid.children;for(var i=0;i<k.length;i++)k[i].classList.toggle('selected',EMOS[i].id===my.emo);}
+
+/* ================= STUDENT: вправа 2 ================= */
+var batGrid=$('batGrid');
+BATS.forEach(function(b){
+  var cell=document.createElement('div');
+  cell.className='cell';cell.id='cell_'+b.id;
+  cell.innerHTML='<div class="bat">'+batSVG(b)+'</div><div class="marks">'+
+    '<button class="mark sq" type="button" data-id="'+b.id+'" data-m="start" title="На початку уроку"></button>'+
+    '<button class="mark ci" type="button" data-id="'+b.id+'" data-m="end" title="Наприкінці уроку"></button></div>';
+  batGrid.appendChild(cell);
+});
+batGrid.addEventListener('click',function(ev){
+  var btn=ev.target.closest('.mark');if(!btn)return;
+  var id=btn.dataset.id,m=btn.dataset.m;
+  if(m==='start')my.start=(my.start===id)?null:id;else my.end=(my.end===id)?null:id;
+  paintBats();saveMe();confetti(btn);
+});
+function paintBats(){
+  BATS.forEach(function(b){
+    var cell=$('cell_'+b.id);
+    cell.querySelector('.mark.sq').classList.toggle('on',my.start===b.id);
+    cell.querySelector('.mark.ci').classList.toggle('on',my.end===b.id);
+    cell.classList.toggle('picked',my.start===b.id||my.end===b.id);
+  });
+}
+function saveMe(){
+  lSet('energomat_my_'+clientId,JSON.stringify({emo:my.emo,start:my.start,end:my.end,name:$('pupilName').value.trim()}));
+  publishMe();updateStatus();updatePeers();
+}
+function restoreMe(){
+  try{var r=lGet('energomat_my_'+clientId);
+    if(r){var d=JSON.parse(r);my.emo=d.emo||null;my.start=d.start||null;my.end=d.end||null;$('pupilName').value=d.name||'';}
+  }catch(e){}
+  paintEmo();paintBats();
+}
+$('pupilName').addEventListener('input',function(){saveMe();});
+function updateStatus(){
+  var s=my.start?BB[my.start].label:null,e=my.end?BB[my.end].label:null;
+  $('statusLine').innerHTML='■ початок: '+(s?'<span class="ok">'+s+'</span>':'<span class="no">обери батарейку</span>')+' ● кінець: '+(e?'<span class="ok">'+e+'</span>':'<span class="no">обери батарейку</span>');
+}
+function activeVotes(){var a=[],k;for(k in votes){var v=votes[k];if(v&&(v.emo||v.start||v.end))a.push(v);}return a;}
+function wordsArr(){var a=[],k;for(k in words){if(words[k])a.push(words[k]);}return a;}
+function drawsArr(){var a=[],k;for(k in draws){if(draws[k])a.push(draws[k]);}return a;}
+function updatePeers(){
+  var n=activeVotes().length;
+  $('peers').innerHTML=n?'🎒 Разом із тобою позначили: <b>'+n+'</b>':'🌟 Ти перший! Сміливіше!';
+}
+
+/* ================= TEACHER ================= */
+var emoBars=$('emoBars');
+EMOS.forEach(function(e){
+  var row=document.createElement('div');row.className='bar-row';row.id='ebar_'+e.id;
+  row.innerHTML='<div class="bar-head"><span>'+e.emoji+' '+e.label+'</span><span><span class="cnt" data-c="c">0</span> · <span data-c="p" style="color:'+e.color+'">0%</span></span></div><div class="bar-track"><div class="bar-fill" style="background:'+e.color+'"></div></div>';
+  emoBars.appendChild(row);
+});
+var grpBars=$('grpBars');
+['full','mid','low'].forEach(function(lv){
+  var L=LEVELS[lv];
+  var d=document.createElement('div');d.className='grp';d.id='grp_'+lv;
+  d.innerHTML='<div class="grp-title"><span class="dotc" style="background:'+L.c+'"></span>'+L.name+'</div>'+
+   '<div class="duo"><span>■</span><div class="track"><div class="fill" data-f="s" style="background:'+L.c+'"></div></div><span data-c="s">0</span></div>'+
+   '<div class="duo"><span>●</span><div class="track"><div class="fill" data-f="e" style="background:'+L.c+';opacity:.55"></div></div><span data-c="e">0</span></div>';
+  grpBars.appendChild(d);
+});
+var strip=$('strip');
+BATS.forEach(function(b){
+  var m=document.createElement('div');m.className='mini';m.id='mini_'+b.id;
+  m.innerHTML=batSVG(b)+'<div class="cnts"><span class="s" data-c="s">■0</span><span class="c" data-c="e">●0</span></div>';
+  m.title=b.label;strip.appendChild(m);
+});
+function setStat(el,t){if(el.textContent===String(t))return;el.textContent=t;el.classList.remove('bump');void el.offsetWidth;el.classList.add('bump');}
+function fmtTime(ts){return new Date(ts).toLocaleTimeString('uk-UA',{hour:'2-digit',minute:'2-digit'});}
+function computeStats(){
+  var arr=activeVotes();
+  var ec={},cs={full:0,mid:0,low:0},ce={full:0,mid:0,low:0},perS={},perE={};
+  var sumE=0,nE0=0,sumS=0,sumE2=0,nS=0,nE=0;
+  EMOS.forEach(function(e){ec[e.id]=0;});
+  BATS.forEach(function(b){perS[b.id]=0;perE[b.id]=0;});
+  arr.forEach(function(v){
+    if(v.emo&&EB[v.emo]){ec[v.emo]++;sumE+=EB[v.emo].score;nE0++;}
+    if(v.start&&BB[v.start]){var l1=BB[v.start].lvl;cs[l1]++;perS[v.start]++;sumS+=LEVELS[l1].score;nS++;}
+    if(v.end&&BB[v.end]){var l2=BB[v.end].lvl;ce[l2]++;perE[v.end]++;sumE2+=LEVELS[l2].score;nE++;}
+  });
+  return {arr:arr,total:arr.length,ec:ec,cs:cs,ce:ce,perS:perS,perE:perE,avgE:nE0?sumE/nE0:0,nE0:nE0,aS:nS?sumS/nS:0,aE:nE?sumE2/nE:0,nS:nS,nE:nE};
+}
+function renderTeacher(){
+  var S=computeStats(),wc=wordCounts(),wArr=wordsArr(),dArr=drawsArr();
+  var anyData=S.total||wArr.length||dArr.length;
+  var showDash=anyData||tEx==='cloud'||tEx==='board';
+  $('emptyState').style.display=(!anyData&&tEx!=='cloud'&&tEx!=='board')?'block':'none';
+  $('dashData').style.display=showDash?'grid':'none';
+  if(!anyData){
+    ['eTotal','nTotal','wTotal','wUniq','bTotal'].forEach(function(id){$(id).textContent='0';});
+    ['eAvg','eTop','nStart','nEnd','nDelta','wTop','bLast'].forEach(function(id){$(id).textContent='—';});
+  } else {
+    var maxE=Math.max.apply(null,EMOS.map(function(e){return S.ec[e.id];}).concat([1]));
+    EMOS.forEach(function(e){
+      var row=$('ebar_'+e.id);
+      row.querySelector('.bar-fill').style.width=Math.round(S.ec[e.id]/maxE*100)+'%';
+      row.querySelector('[data-c="c"]').textContent=S.ec[e.id];
+      row.querySelector('[data-c="p"]').textContent=S.total?Math.round(S.ec[e.id]/S.total*100)+'%':'0%';
+    });
+    setStat($('eTotal'),S.nE0);setStat($('eAvg'),S.nE0?S.avgE.toFixed(1):'—');
+    var top=EMOS.slice().sort(function(a,b){return S.ec[b.id]-S.ec[a.id];})[0];
+    setStat($('eTop'),S.nE0?top.emoji:'—');
+    var maxC=Math.max(S.cs.full,S.cs.mid,S.cs.low,S.ce.full,S.ce.mid,S.ce.low,1);
+    ['full','mid','low'].forEach(function(lv){
+      var g=$('grp_'+lv);
+      g.querySelector('[data-f="s"]').style.width=Math.round(S.cs[lv]/maxC*100)+'%';
+      g.querySelector('[data-f="e"]').style.width=Math.round(S.ce[lv]/maxC*100)+'%';
+      g.querySelector('[data-c="s"]').textContent=S.cs[lv];
+      g.querySelector('[data-c="e"]').textContent=S.ce[lv];
+    });
+    BATS.forEach(function(b){
+      var m=$('mini_'+b.id);
+      m.querySelector('[data-c="s"]').textContent='■'+S.perS[b.id];
+      m.querySelector('[data-c="e"]').textContent='●'+S.perE[b.id];
+    });
+    setStat($('nTotal'),S.total);
+    setStat($('nStart'),S.aS?S.aS.toFixed(1)+' / 3':'—');
+    setStat($('nEnd'),S.aE?S.aE.toFixed(1)+' / 3':'—');
+    var d=S.aE-S.aS;
+    setStat($('nDelta'),(S.nS&&S.nE)?((d>0.05?'⬆️ +':d<-0.05?'⬇️ ':'➖ ')+d.toFixed(1)):'—');
+  }
+  var wKeys=Object.keys(wc);
+  var wSorted=wKeys.slice().sort(function(a,b){return wc[b].c-wc[a].c;});
+  setStat($('wTotal'),wArr.length);setStat($('wUniq'),wKeys.length);
+  setStat($('wTop'),wSorted.length?wc[wSorted[0]].disp:'—');
+  renderCloud($('wcCloudT'),wc,60);
+  setStat($('bTotal'),dArr.length);
+  var lastTs=0;dArr.forEach(function(x){if((x.ts||0)>lastTs)lastTs=x.ts||0;});
+  setStat($('bLast'),lastTs?fmtTime(lastTs):'—');
+  renderBoard($('boardGridT'),'teacher');
+  var feed=$('feedList');feed.innerHTML='';
+  var entries=[];
+  S.arr.forEach(function(v){
+    var parts=[];
+    if(v.emo&&EB[v.emo])parts.push(EB[v.emo].emoji+' '+EB[v.emo].label);
+    if(v.start||v.end)parts.push('■ '+(v.start?BB[v.start].label:'—')+' · ● '+(v.end?BB[v.end].label:'—'));
+    entries.push({ts:v.ts||0,text:(v.name?v.name:'Учень')+': '+parts.join(' | '),tint:v.emo?EB[v.emo].tint:'#fff'});
+  });
+  wArr.forEach(function(w){entries.push({ts:w.ts||0,text:(w.name?w.name:'Учень')+': ☁️ «'+w.word+'»',tint:'#efe4fb'});});
+  dArr.forEach(function(x){entries.push({ts:x.ts||0,text:(x.name?x.name:'Учень')+': 🖼️ малюнок на дошці',tint:'#ddf4fd'});});
+  entries.sort(function(a,b){return b.ts-a.ts;});
+  entries.slice(0,14).forEach(function(en,i){
+    var li=document.createElement('li');
+    li.style.setProperty('--tint',en.tint);li.style.animationDelay=(i*.04)+'s';
+    var sp=document.createElement('span');sp.textContent=en.text;
+    var tm=document.createElement('span');tm.className='tm';tm.textContent=en.ts?fmtTime(en.ts):'';
+    li.appendChild(sp);li.appendChild(tm);feed.appendChild(li);
+  });
+}
+function refreshAll(){
+  if(current==='teacher')renderTeacher();
+  if(current==='student'){updatePeers();if(sEx==='cloud')renderStudentCloud();}
+}
+
+/* ================= ЕКСПОРТ ================= */
+function loadImgSrc(src){return new Promise(function(res){var im=new Image();im.onload=function(){res(im);};im.onerror=function(){res(null);};im.src=src;});}
+function loadImg(svg){return loadImgSrc('data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg));}
+function rr(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+async function buildCanvas(){
+  try{await document.fonts.ready;}catch(e){}
+  var S=computeStats(),wc=wordCounts(),dArr=drawsArr().slice().sort(function(a,b){return (b.ts||0)-(a.ts||0);}).slice(0,8);
+  var W=1600,H=1600+(dArr.length?360:0);
+  var cv=document.createElement('canvas');cv.width=W;cv.height=H;
+  var ctx=cv.getContext('2d');
+  ctx.fillStyle='#fdfcff';ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle='#cfc4e6';ctx.lineWidth=2;
+  for(var y=44;y<H;y+=44){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+  ctx.fillStyle='#f6a5c0';ctx.fillRect(64,0,4,H);
+  ctx.textAlign='center';
+  ctx.font='700 72px Caveat, cursive';
+  ctx.lineWidth=5;ctx.strokeStyle='#e07b00';ctx.strokeText('Рефлексія класу: настрій, енергія, хмара, дошка',W/2,90);
+  ctx.fillStyle='#ffb340';ctx.fillText('Рефлексія класу: настрій, енергія, хмара, дошка',W/2,90);
+  ctx.font='800 24px Nunito, sans-serif';ctx.fillStyle='#6b6488';
+  ctx.fillText(new Date().toLocaleDateString('uk-UA',{day:'numeric',month:'long',year:'numeric'})+'  •  кімната: '+room+'  •  учнів: '+S.total,W/2,130);
+  ctx.textAlign='left';
+  ctx.font='900 30px Nunito, sans-serif';ctx.fillStyle='#1a1a1a';
+  ctx.fillText('🎭 Настрій',90,188);
+  var maxE=Math.max.apply(null,EMOS.map(function(e){return S.ec[e.id];}).concat([1]));
+  EMOS.forEach(function(e,i){
+    var yy=212+i*60;
+    ctx.font='900 23px Nunito, sans-serif';ctx.fillStyle='#1a1a1a';
+    ctx.fillText(e.emoji+' '+e.label,90,yy+21);
+    ctx.fillStyle=e.color;rr(ctx,330,yy,Math.max(4,430*S.ec[e.id]/maxE),28,13);ctx.fill();
+    ctx.strokeStyle='#1a1a1a';ctx.lineWidth=3;rr(ctx,330,yy,430,28,13);ctx.stroke();
+    ctx.fillStyle='#1a1a1a';ctx.fillText(S.ec[e.id]+' ('+Math.round(S.ec[e.id]/Math.max(1,S.total)*100)+'%)',780,yy+21);
+  });
+  ctx.font='900 30px Nunito, sans-serif';ctx.fillText('🔋 Енергія: ■ початок / ● кінець',900,188);
+  var maxC=Math.max(S.cs.full,S.cs.mid,S.cs.low,S.ce.full,S.ce.mid,S.ce.low,1);
+  ['full','mid','low'].forEach(function(lv,i){
+    var yy=212+i*88;
+    ctx.font='900 23px Nunito, sans-serif';ctx.fillStyle='#1a1a1a';
+    ctx.fillText(LEVELS[lv].name,900,yy+17);
+    ctx.fillStyle=LEVELS[lv].c;rr(ctx,1140,yy-4,Math.max(4,300*S.cs[lv]/maxC),22,11);ctx.fill();
+    ctx.globalAlpha=.55;rr(ctx,1140,yy+24,Math.max(4,300*S.ce[lv]/maxC),22,11);ctx.fill();ctx.globalAlpha=1;
+    ctx.fillStyle='#1a1a1a';ctx.fillText(S.cs[lv]+' / '+S.ce[lv],1460,yy+17);
+  });
+  ctx.font='900 25px Nunito, sans-serif';
+  ctx.fillText('⚡ '+(S.aS?S.aS.toFixed(1):'—')+'/3 → 🔋 '+(S.aE?S.aE.toFixed(1):'—')+'/3  📈 '+((S.aE-S.aS>=0?'+':'')+(S.aE-S.aS).toFixed(1)),900,500);
+  ctx.fillText('🌡️ Настрій: '+(S.avgE?S.avgE.toFixed(1):'—')+'/5',900,538);
+  var imgs=await Promise.all(BATS.map(function(b){return loadImg(batSVG(b));}));
+  BATS.forEach(function(b,i){
+    var cxx=80+i*126,cyy=600;
+    if(imgs[i])ctx.drawImage(imgs[i],cxx,cyy,105,158);
+    ctx.font='900 20px Nunito, sans-serif';
+    ctx.fillStyle='#e8434c';ctx.fillText('■'+S.perS[b.id],cxx+14,cyy+184);
+    ctx.fillStyle='#f7941d';ctx.fillText('●'+S.perE[b.id],cxx+60,cyy+184);
+  });
+  ctx.textAlign='center';
+  ctx.font='900 34px Nunito, sans-serif';ctx.fillStyle='#1a1a1a';
+  ctx.fillText('☁️ Хмара слів'+(meta.wq?' — «'+meta.wq+'»':''),W/2,860);
+  var wSorted=Object.keys(wc).sort(function(a,b){return wc[b].c-wc[a].c;}).slice(0,30);
+  var maxW=wSorted.length?wc[wSorted[0]].c:1;
+  var cy=920,lineW=0,maxWd=W-220;
+  wSorted.forEach(function(k,i){
+    var size=22+((wc[k].c-1)/Math.max(1,maxW-1))*46;
+    ctx.font='900 '+size.toFixed(0)+'px Nunito, sans-serif';
+    var txt=wc[k].disp+(wc[k].c>1?' ⁺'+wc[k].c:'');
+    var wd=ctx.measureText(txt).width+26;
+    if(lineW+wd>maxWd){cy+=size+18;lineW=0;}
+    ctx.fillStyle=WC_COLORS[(k.length+i)%WC_COLORS.length];
+    ctx.fillText(txt,110+lineW+wd/2,cy+size);
+    lineW+=wd;
+  });
+  if(dArr.length){
+    ctx.textAlign='center';
+    ctx.font='900 34px Nunito, sans-serif';ctx.fillStyle='#1a1a1a';
+    ctx.fillText('🖼️ Спільна дошка'+(meta.task?' — «'+meta.task+'»':''),W/2,1250);
+    var dImgs=await Promise.all(dArr.map(function(d){return loadImgSrc(d.img);}));
+    dArr.forEach(function(d,i){
+      var col=i%4,rowI=Math.floor(i/4);
+      var bx=140+col*340,by=1290+rowI*170;
+      ctx.fillStyle='#fff';ctx.fillRect(bx,by,280,120);
+      if(dImgs[i])ctx.drawImage(dImgs[i],bx,by,280,120);
+      ctx.strokeStyle='#1a1a1a';ctx.lineWidth=4;ctx.strokeRect(bx,by,280,120);
+      ctx.font='900 18px Nunito, sans-serif';ctx.fillStyle='#1a1a1a';
+      ctx.fillText('✍️ '+d.name,bx+140,by+145);
+    });
+  }
+  ctx.font='800 18px Nunito, sans-serif';ctx.fillStyle='#6b6488';ctx.textAlign='center';
+  ctx.fillText('Зроблено в «Рефлексія класу» • 4 вправи наживо',W/2,H-22);
+  return cv;
+}
+$('pngBtn').onclick=async function(){
+  if(!activeVotes().length&&!wordsArr().length&&!drawsArr().length){toast('⚠️ Немає даних для експорту');return;}
+  toast('🎨 Готую картинку…');
+  var cv=await buildCanvas();
+  var a=document.createElement('a');a.download='reflexia-klassu.png';a.href=cv.toDataURL('image/png');a.click();
+  toast('🖼️ Картинку збережено!');
+};
+$('pdfBtn').onclick=async function(){
+  if(!activeVotes().length&&!wordsArr().length&&!drawsArr().length){toast('⚠️ Немає даних для експорту');return;}
+  if(typeof window.jspdf==='undefined'){toast('⚠️ PDF-бібліотека не завантажилась');return;}
+  toast('🎨 Готую PDF…');
+  var cv=await buildCanvas();
+  var pdf=new window.jspdf.jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
+  var mmW=281,mmH=mmW*cv.height/cv.width;
+  if(mmH>202){mmH=202;mmW=mmH*cv.width/cv.height;}
+  pdf.addImage(cv.toDataURL('image/png'),'PNG',(297-mmW)/2,(210-mmH)/2,mmW,mmH);
+  pdf.save('reflexia-klassu.pdf');
+  toast('📄 PDF збережено!');
+};
+
+/* ================= КОПІЮВАННЯ / ДІЇ ================= */
+function copyText(t,cb){
+  function last(){try{window.prompt('Скопіюйте посилання:',t);}catch(e){}}
+  function fb(){
+    var ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.opacity='0';
+    document.body.appendChild(ta);ta.select();
+    var ok=false;try{ok=document.execCommand('copy');}catch(e){}
+    ta.remove();if(ok){cb&&cb();}else last();
+  }
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(function(){cb&&cb();}).catch(fb);}else fb();
+}
+$('copyBtn').onclick=function(){copyText(baseLink(),function(){toast('📋 Посилання для учнів скопійовано! 🚀');});};
+$('copyTBtn').onclick=function(){copyText(teacherLink(),function(){toast('📋 Посилання вчителя скопійовано!');});};
+var NAMES=['Оленка','Іванко','Софійка','Максим','Даринка','Артем','Катруся','Богдан','Марійка','Тарасик','Юля','Денис'];
+var DEMO_WORDS=['натхнення','дружба','цікаво','практика','творчість','успіх','знання','радість','виклик','відкриття'];
+$('demoBtn').onclick=function(){
+  if(!online){toast('⚠️ Потрібне з\u0027єднання з сервером');return;}
+  var n=4+Math.floor(Math.random()*4);
+  for(var i=0;i<n;i++){
+    var id='demo_'+Math.random().toString(36).slice(2,9);
+    var si=Math.floor(Math.random()*12);
+    var d={name:NAMES[Math.floor(Math.random()*NAMES.length)],emo:EMOS[Math.floor(Math.random()*5)].id,start:BATS[si].id,end:Math.random()<.85?BATS[Math.min(11,si+1+Math.floor(Math.random()*2))].id:null,ts:Date.now()-Math.floor(Math.random()*9)*60000};
+    votes[id]=d;client.publish(TOPIC+id,JSON.stringify(d),{retain:true,qos:0});
+    var wid='demo_w_'+Math.random().toString(36).slice(2,9);
+    var wd={cid:'demo',word:DEMO_WORDS[Math.floor(Math.random()*DEMO_WORDS.length)],name:d.name,ts:d.ts};
+    words[wid]=wd;client.publish(TOPIC_W+wid,JSON.stringify(wd),{retain:true,qos:0});
+  }
+  refreshAll();renderStudentCloud();toast('🧪 Додано демо-дані!');
+};
+$('resetBtn').onclick=function(){
+  if(!ask('Очистити ВСЕ: позначки, слова хмари та малюнки дошки?'))return;
+  var ids=Object.keys(votes),wids=Object.keys(words),dids=Object.keys(draws);
+  if(online&&client){
+    ids.forEach(function(id){client.publish(TOPIC+id,'',{retain:true,qos:0});});
+    wids.forEach(function(id){client.publish(TOPIC_W+id,'',{retain:true,qos:0});});
+    dids.forEach(function(id){client.publish(TOPIC_D+id,'',{retain:true,qos:0});});
+  }
+  votes={};words={};draws={};refreshAll();renderStudentCloud();
+  if(current==='student')renderBoard($('boardGridS'),'student');
+  toast('🧹 Очищено!');
+};
+
+/* ================= КОНФЕТІ / ТОСТ ================= */
+var CC=['#ffd23f','#ff7ac3','#4cc9f0','#3cb549','#b388eb','#f7941d','#e8434c'];
+function confetti(el){
+  var r=el.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;
+  for(var i=0;i<18;i++){
+    var p=document.createElement('span');p.className='confetti';
+    var s=6+Math.random()*9;
+    p.style.left=cx+'px';p.style.top=cy+'px';p.style.width=s+'px';p.style.height=s+'px';
+    p.style.background=CC[i%CC.length];p.style.borderRadius=Math.random()>.5?'50%':'2px';
+    p.style.setProperty('--dx',(Math.random()*260-130)+'px');
+    p.style.animationDuration=(1+Math.random()*.7)+'s';
+    document.body.appendChild(p);
+    (function(n){setTimeout(function(){n.remove();},1900);})(p);
+  }
+}
+var tT=null;
+function toast(m){var t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(tT);tT=setTimeout(function(){t.classList.remove('show');},2600);}
+
+var isTeacher=(params.get('role')==='teacher'||location.hash==='#teacher');
+show(isTeacher?'teacher':'student');
+connect();
+updateTimerUI();updateWcUI();updateBoardUI();
+})();
+</script>
+</body>
+</html>
